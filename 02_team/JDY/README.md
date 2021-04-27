@@ -527,4 +527,4 @@ $fruits: (apple, orange, banana, mango);
 }
 ```
 
-`@while`은 해당 while문의 조건이 `false`가 될때까지 반복하는 것이다.
+`@while` 은 해당 while문의 조건이 `false`가 될때까지 반복하는 것이다.
