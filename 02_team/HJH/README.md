@@ -771,4 +771,111 @@ complied to
 
 - 인수의 기본값 설정
 
-인수는 기본값을 가질 수 있으므로, `@include` 
+인수는 기본값을 가질 수 있으므로, `@include` 포함 단계에서 별도의 인수가 전달되지 않으면 기본값이 사용된다.
+
+```scss
+@mixin dash-line($width: 1px, $color: black) {
+  border: $width dashed $color;
+}
+
+.box1 { @include dash-line; }
+.box2 { @include dash-line(4px); }
+```
+
+compiled to
+
+```css
+.box1 {
+  border: 1px dashed black;
+}
+.box2 {
+  border: 4px dashed black;
+}
+```
+
+## 내장 함수(Built-in Functions)
+
+### 모듈
+
+Sass는 유용한 기능(믹스인 포함)을 포함한 내장 모듈을 제공한다. 이 모듈들은 다른 사용자 정의 stylesheet와 같이 `@use rule`로 가져올 수 있고 그 기능들은 다른 모듈 멤버와 동일한 방식으로 호출할 수 있다.
+모든 내장 모듈은 `sass:`로 시작하는 URL로 시작한다.
+
+> Sass의 모듈 시스템이 도입되기 전에, 모든 Sass 함수들은 전역 범위에서 사용 가능했다. 많은 함수들이 여전히 전역 이름을 가지고 있다.
+> Sass 개발팀은 전역 함수의 사용을 권장하지 않고 머지않아 그들을 deprecate할 예정이다. 그러나 현재는 Sass의 예전 버전과 LibSass(아직 모듈 시스템을 지원하지 않는다.)과 호환을 위해 남아있다.
+> 
+> 새로운 모듈 시스템에서는 몇 함수만이 `if()`와 같은 특별한 평가 프로시저가 포함되거나 `rgb()`와 `hsl()` 같은 내장 CSS 함수를 이용하기 때문에 전역에서 사용가능할 것이다.
+> 이 함수들은 deprecate 되지 않을 것이며 자유롭게 사용 가능하다.
+
+```scss
+@use "sass:color";
+
+.button {
+  $primary-color: #6b717f;
+  color: $primary-color;
+  border: 1px solid color.scale($primary-color, $lightness: 20%);
+}
+```
+
+Sass는 다음과 같은 내장 모듈을 지원한다. 각 모듈에 내장된 함수의 디테일한 사용법은 [sass-lang 공식 문서](https://sass-lang.com/documentation/modules) 를 참고하도록 한다.
+
+- `sass:math` 모듈: type `numbers`와 관련된 함수를 제공한다.
+- `sass:string` 모듈: type `strings`를 쉽게 결함하고 검색하고 나눌 수 있는 함수를 제공한다.
+- `sass:color` 모듈: type `colors`와 관련된 함수를 제공하는데 색상 테마를 쉽게 만들게 해주며 기존의 색상을 기반으로 새로운 색상을 만드는 기능을 제공한다.
+- `sass:list` 모튤: type `lists`의 값에 접근하고 수정하는 함수를 제공한다.
+- `sass:map` 모듈: type `map`의 key와 연결된 value를 보고 추적하는 등의 함수를 제공한다.
+- `sass:selector` 모듈: Sass의 강력한 셀렉팅 엔진에 접근가능하게 해준다.
+- `sass:meta` 모듈: Sass의 디테일한 내부 작업 구조를 보여준다.
+
+### 전역 함수
+
+- hsl(), hsla()
+```scss
+hsl($hue $saturation $lightness)
+hsl($hue $saturation $lightness / $alpha)
+hsl($hue $saturation $lightness, $alpha: 1) // default alpha: 1
+hsla($hue $saturation $lightness)
+hsla($hue $saturation $lightness / $alpha)
+hsla($hue $saturation $lightness, $alpha: 1) // default alpha: 1
+```
+
+위의 함수는 `hue`(색상; 범위: 0deg ~ 360deg), `saturation`(채도; 범위: 0% ~ 100%), `lightness`(명도; 범위: 0% ~ 100%) 그리고 `alpha`(알파채널, 투명도; 범위: 0(0%) ~ 1(100%))로 하나의 색상을 반환한다.
+
+> Sass에는 나누기 연산과 관련한 파싱 예외가 있기 때문에 `hsl($hue $saturation $lightness / $alpha)` 대신 `hsl($hue, $saturation, $lightness, $alpha)` 사용을 권장한다.
+
+- if()
+```scss
+if($condition, $if-true, $if-false)
+```
+
+위의 함수는 `$condition`이 true이면 `$if-true`를, false이면 `$if-false`를 반환한다.
+이 함수는 반환되지 않는 인수를 평가하지 않는다는 점에서 특별하다. 그래서 사용되지 않은 인수가 에러를 발생시키더라도 안전하게 호출될 수 있다.
+
+```scss
+@debug if(true, 10px, 15px); // 10px
+@debug if(false, 10px, 15px); // 15px
+@debug if(variable-defined($var), $var, null); // null; variable-defined(*args)가 정의되지 않아도 안전하게 null을 반환한다.
+```
+
+- rgb(), rgba()
+
+```scss
+rgb($red $green $blue)
+rgb($red $green $blue / $alpha)
+rgb($red, $green, $blue, $alpha: 1)
+rgb($color, $alpha)
+rgba($red $green $blue)
+rgba($red $green $blue / $alpha)
+rgba($red, $green, $blue, $alpha: 1)
+rgba($color, $alpha) //=> color 
+```
+
+위의 함수는 `$red`, `$green`, `$blue` 그리고 선택적으로 `$alpha`이 전달되면 하나의 색상을 반환한다.
+
+각각의 인수 자리에는 0부터 255까지 단위가 없는 숫자나 0%와 100% 사이의 퍼센트 수가 올 수 있다. 알파 채널은 0과 1사이의 단위가 없는 수나 0%와 100% 사이의 퍼센트 수가 올 수 있다.
+
+```scss
+@debug rgb(0 51 102); // #036
+@debug rgb(95%, 92.5%, 89.5%); // #f2ece4
+@debug rgb(0 51 102 / 50%); // rgba(0, 51, 102, 0.5)
+@debug rgba(95%, 92.5%, 89.5%, 0.2); // rgba(242, 236, 228, 0.2)
+```
